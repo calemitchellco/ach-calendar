@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ACH Holiday Calendar – July 2025</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      display: flex;
+      max-width: 800px;
+      margin: 40px auto;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      background: white;
+    }
+
+    .left-panel {
+      width: 35%;
+      background-color: #0eaa52;
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    .left-panel .big-date {
+      font-size: 60px;
+      font-weight: bold;
+    }
+
+    .left-panel .weekday {
+      font-size: 20px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .submission-note {
+      font-size: 16px;
+      margin-top: 20px;
+      line-height: 1.4;
+    }
+
+    .right-panel {
+      width: 65%;
+      background-color: white;
+      padding: 30px;
+    }
+
+    .calendar-header {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #03293b;
+      margin-bottom: 20px;
+    }
+
+    .calendar-labels,
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+    }
+
+    .calendar-labels div {
+      font-weight: bold;
+      color: #666;
+      padding-bottom: 8px;
+    }
+
+    .calendar-grid div {
+      padding: 12px;
+      margin: 3px;
+      border-radius: 6px;
+      background: #f0f0f0;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.2s ease;
+    }
+
+    .calendar-grid .disabled {
+      background-color: #ddd;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+
+    .calendar-grid .selected {
+      background-color: #0e425b;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="left-panel" id="leftPanel">
+    <div class="big-date">--</div>
+    <div class="weekday">Select a Date</div>
+    <div class="submission-note" id="submissionNote">
+      Select the date you would like your ACH funds to settle and we’ll show you the submission deadline.
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="calendar-header">July 2025</div>
+    <div class="calendar-labels">
+      <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+</div>
+
+<script>
+  const year = 2025;
+  const month = 6; // July (0-indexed)
+  const holidays = ['2025-07-04'];
+  const calendarGrid = document.getElementById("calendarGrid");
+  const bigDate = document.querySelector(".big-date");
+  const weekday = document.querySelector(".weekday");
+  const submissionNote = document.getElementById("submissionNote");
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startDay = new Date(year, month, 1).getDay();
+
+  for (let i = 0; i < startDay; i++) {
+    const blank = document.createElement("div");
+    calendarGrid.appendChild(blank);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month, day);
+    const iso = date.toISOString().split('T')[0];
+    const el = document.createElement("div");
+    el.textContent = day;
+
+    const dayOfWeek = date.getDay();
+    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+    const isHoliday = holidays.includes(iso);
+
+    if (isWeekend || isHoliday) {
+      el.classList.add("disabled");
+    } else {
+      el.addEventListener("click", () => {
+        document.querySelectorAll(".calendar-grid div").forEach(d => d.classList.remove("selected"));
+        el.classList.add("selected");
+
+        const depositDate = date.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        });
+
+        let cutoff = new Date(date);
+        do {
+          cutoff.setDate(cutoff.getDate() - 1);
+        } while (cutoff.getDay() === 0 || cutoff.getDay() === 6);
+
+        const cutoffDate = cutoff.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        });
+
+        bigDate.textContent = day.toString().padStart(2, '0');
+        weekday.textContent = date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+        submissionNote.innerHTML = `To have your ACH post effective <strong>${depositDate}</strong>, submit your file by <strong>${cutoffDate} at 3:30 PM CST</strong>.`;
+      });
+    }
+
+    calendarGrid.appendChild(el);
+  }
+</script>
+
+</body>
+</html>
